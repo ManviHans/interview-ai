@@ -40,9 +40,16 @@ export const useAuth = () => {
     
     const handleLogout = async () =>{
         setLoading(true)
-        const data = await logout()
-        setUser(null)
-        setLoading(false)
+        try {
+            await logout()
+            setUser(null)
+            return true
+        } catch (err) {
+            console.log(err)
+            return false
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

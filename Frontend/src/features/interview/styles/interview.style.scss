@@ -501,6 +501,40 @@ $severity-low: #3fb950;
     }
 }
 
+.interview-nav__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.interview-nav__logout {
+    padding: 0.7rem 1rem;
+    border: 1px solid $border-color;
+    border-radius: 0.55rem;
+    background: #fff;
+    color: $text-primary;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.18s, border-color 0.18s;
+
+    &:hover:not(:disabled) {
+        background: $bg-panel;
+        border-color: #c5c6cc;
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba($accent, 0.3);
+        outline-offset: 3px;
+    }
+
+    &:disabled {
+        cursor: wait;
+        opacity: 0.65;
+    }
+}
+
 .loading-screen {
     background: $bg-page;
     color: $text-primary;
@@ -543,6 +577,11 @@ $severity-low: #3fb950;
         .button {
             flex-shrink: 0;
         }
+    }
+
+    .interview-nav__actions {
+        flex-direction: row;
+        align-items: center;
     }
 
     .interview-divider {
