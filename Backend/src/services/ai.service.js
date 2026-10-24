@@ -9,7 +9,7 @@ const ai = new GoogleGenAI({
 
 
 const interviewReportSchema = z.object({
-    matchScore: z.number().describe("A score between 0 and 100 indicating how well the candidate's profile matches the job describe"),
+    matchScore: z.number().min(0).max(100).describe("A score between 0 and 100 indicating how well the candidate's profile matches the job description"),
     technicalQuestions: z.array(z.object({
         question: z.string().describe("The technical question can be asked in the interview"),
         intention: z.string().describe("The intention of interviewer behind asking this question"),
@@ -39,6 +39,11 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
                         Resume: ${resume}
                         Self Description: ${selfDescription}
                         Job Description: ${jobDescription}
+
+                        Return a complete, personalized report. Do not leave fields empty or return empty arrays.
+                        Include at least 5 technical questions and 3 behavioral questions, each with an intention and a helpful sample answer.
+                        Include a match score from 0 to 100, at least 1 relevant skill gap, and a preparation plan with at least 3 days and practical tasks for each day.
+                        Base the questions, answers, skill gaps, and plan on the candidate profile and the job description. Do not use placeholder text.
 `
 
     const response = await ai.models.generateContent({
@@ -50,7 +55,23 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
         }
     })
 
-    return JSON.parse(response.text)
+    if (!response.text) {
+        throw new Error("The AI returned an empty response. Please try again.")
+    }
+
+    const report = JSON.parse(response.text)
+
+    if (
+        !Number.isFinite(report.matchScore) ||
+        !Array.isArray(report.technicalQuestions) || report.technicalQuestions.length === 0 ||
+        !Array.isArray(report.behavioralQuestions) || report.behavioralQuestions.length === 0 ||
+        !Array.isArray(report.skillGaps) || report.skillGaps.length === 0 ||
+        !Array.isArray(report.preparationPlan) || report.preparationPlan.length === 0
+    ) {
+        throw new Error("The AI returned an incomplete interview report. Please try again.")
+    }
+
+    return report
 
 
 }
