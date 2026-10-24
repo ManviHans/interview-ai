@@ -1,6 +1,5 @@
 const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
-const { zodToJsonSchema } = require("zod-to-json-schema")
 const puppeteer = require("puppeteer")
 
 const ai = new GoogleGenAI({
@@ -14,23 +13,29 @@ const interviewReportSchema = z.object({
         question: z.string().describe("The technical question can be asked in the interview"),
         intention: z.string().describe("The intention of interviewer behind asking this question"),
         answer: z.string().describe("How to answer this question, what points to cover, what approach to take etc.")
-    })).describe("Technical questions that can be asked in the interview along with their intention and how to answer them"),
+    })).min(5).describe("At least 5 technical interview questions with their intention and a sample answer"),
     behavioralQuestions: z.array(z.object({
         question: z.string().describe("The technical question can be asked in the interview"),
         intention: z.string().describe("The intention of interviewer behind asking this question"),
         answer: z.string().describe("How to answer this question, what points to cover, what approach to take etc.")
-    })).describe("Behavioral questions that can be asked in the interview along with their intention and how to answer them"),
+    })).min(3).describe("At least 3 behavioral interview questions with their intention and a sample answer"),
     skillGaps: z.array(z.object({
         skill: z.string().describe("The skill which the candidate is lacking"),
         severity: z.enum([ "low", "medium", "high" ]).describe("The severity of this skill gap, i.e. how important is this skill for the job and how much it can impact the candidate's chances")
-    })).describe("List of skill gaps in the candidate's profile along with their severity"),
+    })).min(1).describe("At least 1 relevant skill gap in the candidate's profile along with severity"),
     preparationPlan: z.array(z.object({
         day: z.number().describe("The day number in the preparation plan, starting from 1"),
         focus: z.string().describe("The main focus of this day in the preparation plan, e.g. data structures, system design, mock interviews etc."),
         tasks: z.array(z.string()).describe("List of tasks to be done on this day to follow the preparation plan, e.g. read a specific book or article, solve a set of problems, watch a video etc.")
-    })).describe("A day-wise preparation plan for the candidate to follow in order to prepare for the interview effectively"),
+    })).min(3).describe("A preparation plan with at least 3 days and practical tasks"),
     title: z.string().describe("The title of the job for which the interview report is generated"),
 })
+
+function toGeminiJsonSchema(schema) {
+    const jsonSchema = z.toJSONSchema(schema, { target: "draft-7" })
+    delete jsonSchema.$schema
+    return jsonSchema
+}
 
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
 
@@ -39,11 +44,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
                         Resume: ${resume}
                         Self Description: ${selfDescription}
                         Job Description: ${jobDescription}
-
-                        Return a complete, personalized report. Do not leave fields empty or return empty arrays.
-                        Include at least 5 technical questions and 3 behavioral questions, each with an intention and a helpful sample answer.
-                        Include a match score from 0 to 100, at least 1 relevant skill gap, and a preparation plan with at least 3 days and practical tasks for each day.
-                        Base the questions, answers, skill gaps, and plan on the candidate profile and the job description. Do not use placeholder text.
+                        Create a complete personalized report: include at least 5 technical questions, 3 behavioral questions, 1 relevant skill gap, and 3 days in the preparation plan. Give every question an intention and a useful sample answer, and include practical tasks for every day.
 `
 
     const response = await ai.models.generateContent({
@@ -51,27 +52,11 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema),
+            responseJsonSchema: toGeminiJsonSchema(interviewReportSchema),
         }
     })
 
-    if (!response.text) {
-        throw new Error("The AI returned an empty response. Please try again.")
-    }
-
-    const report = JSON.parse(response.text)
-
-    if (
-        !Number.isFinite(report.matchScore) ||
-        !Array.isArray(report.technicalQuestions) || report.technicalQuestions.length === 0 ||
-        !Array.isArray(report.behavioralQuestions) || report.behavioralQuestions.length === 0 ||
-        !Array.isArray(report.skillGaps) || report.skillGaps.length === 0 ||
-        !Array.isArray(report.preparationPlan) || report.preparationPlan.length === 0
-    ) {
-        throw new Error("The AI returned an incomplete interview report. Please try again.")
-    }
-
-    return report
+    return JSON.parse(response.text)
 
 
 }
@@ -121,7 +106,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(resumePdfSchema),
+            responseJsonSchema: toGeminiJsonSchema(resumePdfSchema),
         }
     })
 
