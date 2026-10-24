@@ -475,12 +475,14 @@ $severity-low: #3fb950;
     }
 }
 
-.interview-nav .button.primary-button {
+.interview-nav .button.primary-button,
+.interview-sidebar__logout {
     background: #20212a;
     border: 1px solid #16171e;
     border-radius: 0.55rem;
     font-family: $font-stack;
     font-weight: 600;
+    color: #fff;
     box-shadow: 0 2px 4px rgba(32, 33, 42, 0.16);
     transition: background-color 0.18s, box-shadow 0.18s, transform 0.18s;
 
@@ -510,26 +512,9 @@ $severity-low: #3fb950;
 .interview-sidebar__logout {
     align-self: flex-end;
     margin-top: auto;
-    padding: 0.7rem 1rem;
-    border: 1px solid $border-color;
-    border-radius: 0.55rem;
-    background: #fff;
-    color: $text-primary;
-    font: inherit;
+    padding: 0.75rem 1rem;
     font-size: 0.875rem;
-    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.18s, border-color 0.18s;
-
-    &:hover:not(:disabled) {
-        background: $bg-panel;
-        border-color: #c5c6cc;
-    }
-
-    &:focus-visible {
-        outline: 3px solid rgba($accent, 0.3);
-        outline-offset: 3px;
-    }
 
     &:disabled {
         cursor: wait;
