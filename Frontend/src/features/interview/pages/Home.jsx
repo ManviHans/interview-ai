@@ -82,7 +82,6 @@ const Home = () => {
                         <div className='upload-section'>
                             <label className='section-label'>
                                 Upload Resume
-                                <span className='badge badge--best'>Best Results</span>
                             </label>
                             <label className='dropzone' htmlFor='resume'>
                                 <span className='dropzone__icon'>
