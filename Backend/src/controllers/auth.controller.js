@@ -65,6 +65,12 @@ async function loginUserController(req, res) {
     
     const { email, password } = req.body;
 
+    if (!email || !password) {
+        return res.status(400).json({
+            message: "Please provide email and password"
+        });
+    }
+
     const user = await userModel.findOne({ email});
 
     if (!user) {

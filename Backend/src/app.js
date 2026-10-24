@@ -23,4 +23,11 @@ const interviewRouter= require("./routes/interview.routes")
 app.use("/api/auth", authRouter);
 app.use("/api/interview", interviewRouter)
 
+app.use((error, req, res, next) => {
+    console.error(error.message)
+    res.status(error.status || 500).json({
+        message: error.message || "Something went wrong while generating the report"
+    })
+})
+
 module.exports = app;

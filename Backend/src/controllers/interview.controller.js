@@ -6,21 +6,76 @@ const interviewReportModel = require( "../models/interviewReport.model")
 
 async function generateInterviewReportController(req, res ){
 
-  const resumeContent = await (new pdfparse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
-  const { selfDescription, jobDescription} = req.body 
+  const { selfDescription, jobDescription} = req.body || {}
+  let resumeText = ""
+
+  if (!jobDescription?.trim()) {
+    return res.status(400).json({
+      message: "Please enter a job description"
+    })
+  }
+
+  if (req.file) {
+    const resumeContent = await (new pdfparse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
+    resumeText = resumeContent.text
+  }
+
+  if (!resumeText && !selfDescription?.trim()) {
+    return res.status(400).json({
+      message: "Please upload a resume or enter a self-description"
+    })
+  }
 
   const interviewReportByAi = await generateInterviewReport({ 
-    resume: resumeContent.text, 
+    resume: resumeText,
     selfDescription, 
     jobDescription
 })
 
+    const technicalQuestions = (Array.isArray(interviewReportByAi.technicalQuestions)
+      ? interviewReportByAi.technicalQuestions
+      : []).map((item) => typeof item === "string"
+        ? { question: item, intention: "This checks your understanding of the topic.", answer: "Explain the idea in your own words and give a simple example." }
+        : item)
+
+    const behavioralQuestions = (Array.isArray(interviewReportByAi.behavioralQuestions)
+      ? interviewReportByAi.behavioralQuestions
+      : []).map((item) => typeof item === "string"
+        ? { question: item, intention: "This checks how you handle a real work situation.", answer: "Describe the situation, what you did, and what happened as a result." }
+        : item)
+
+    const skillGaps = (Array.isArray(interviewReportByAi.skillGaps)
+      ? interviewReportByAi.skillGaps
+      : []).map((item) => typeof item === "string"
+        ? { skill: item, severity: "medium" }
+        : item)
+
+    const preparationPlan = (Array.isArray(interviewReportByAi.preparationPlan)
+      ? interviewReportByAi.preparationPlan
+      : []).map((day, index) => {
+        if (typeof day === "string") {
+          return { day: index + 1, focus: day, tasks: [] }
+        }
+
+        return {
+          ...day,
+          day: day.day || index + 1,
+          focus: day.focus || day.intention || "",
+          tasks: Array.isArray(day.tasks) ? day.tasks : day.tasks ? [day.tasks] : []
+        }
+      })
+
     const interviewReport = await interviewReportModel.create({
+        ...interviewReportByAi,
         user : req.user.id,
-        resume:resumeContent.text,
+        resumeText,
         selfDescription,
         jobDescription,
-        ...interviewReportByAi
+        title: interviewReportByAi.title || "Interview Preparation Plan",
+        technicalQuestions,
+        behavioralQuestions,
+        skillGaps,
+        preparationPlan
     })
 
     res.status(201).json({

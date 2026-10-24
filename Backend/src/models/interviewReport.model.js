@@ -111,7 +111,7 @@ const preparationPlanSchema = new mongoose.Schema({
         required: [ true, "Focus is required"]
     }, 
     tasks:{
-        type: String,
+        type: [String],
         required: [ true, "Task is required "]
     }
 
@@ -135,9 +135,9 @@ const preparationPlanSchema = new mongoose.Schema({
         min:0,
         max:100,
     },
-    technicalQuestion: [ technicalQuestionSchema],
-    behaviouralQuestion: [ behaviouralQuestionSchema],
-    skillGap:[ skillGapSchema],
+    technicalQuestions: [ technicalQuestionSchema],
+    behavioralQuestions: [ behaviouralQuestionSchema],
+    skillGaps:[ skillGapSchema],
     preparationPlan: [ preparationPlanSchema],
     user:{
         type: mongoose.Schema.Types.ObjectId,

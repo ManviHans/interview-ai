@@ -15,27 +15,27 @@ const interviewReportSchema = z.object({
 
     matchScore:z.number().describe(" A score between 0 to 100 to show how well the candidate's profile match to the jpb description"),
 
-    technicalQuestion: z.array(z.array({
+    technicalQuestions: z.array(z.object({
      question: z.string().describe("The technical questions can be asked in the interview"),
      intention:z.string().describe("The intention of interviewer behind asking the question"),
      answer:z.string().describe("How to answer this question, what points to cover, what approach to follow ")
     })).describe("Technical questions that can be asked in the interview along with their intentions and how to answers, what approaches to follow etc"),
 
-    behavioralQuestions:z.array(z.array({
+    behavioralQuestions:z.array(z.object({
      question: z.string().describe("The behavioural questions can be asked in the interview"),
      intention:z.string().describe("The intention of interviewer behind asking the question"),
      answer:z.string().describe("How to answer this question, what points to cover, what approach to follow ")
     })).describe(" Behavioural questions that can be asked in the interview along with their intentions and how to answers, what approaches to follow etc"),
 
-    skillGaps:z.array(z.array({
+    skillGaps:z.array(z.object({
         skill:z.string().describe("The skills which the candidate is lacking "),
-        severity: z.enum(["Low","Medium", "High"]).describe("The severity of the need")
+        severity: z.enum(["low","medium", "high"]).describe("The severity of the need")
     })).describe("List of skills that the candidate is lacking and the  severity of the need of learning that skill"),
 
-    preparationPlan:z.array(z.array({
+    preparationPlan:z.array(z.object({
      day: z.number().describe("The day number in the preparation plan "),
-     intention:z.string().describe("The main focus of preparation on that particular day"),
-     answer:z.array(z.string().describe("List of the tasks to be done on that day "))
+     focus:z.string().describe("The main focus of preparation on that particular day"),
+     tasks:z.array(z.string()).describe("List of the tasks to be done on that day ")
     })).describe("A day-wise preparation plan for the candidate to follow "),
 
     title: z.string().describe("The title of the job for which the interview report has been generated ")
@@ -49,14 +49,18 @@ async function generateInterviewReport({
     jobDescription
 }){
 
-    const prompt = `Generate a resume for the candidate with the following details: 
-        Resume : ${resume}
-        selfDescription:${selfDescription}
-        jonDescription:${jobDescription}
-    
+    const prompt = `Create a complete interview preparation report using the candidate details below.
+        Return all fields required by the response schema. Do not leave any arrays empty.
+        Include exactly 5 technical questions and answers, 5 behavioral questions and answers,
+        at least 3 relevant skill gaps, and a 6-day preparation plan. Set matchScore from 0 to 100
+        and title to the job title from the job description.
+
+        Resume: ${resume}
+        Self-description: ${selfDescription}
+        Job description: ${jobDescription}
     `
     const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.5-flash-lite",
         contents : prompt,
         config:{
             responseMimeType:"application/json",
@@ -64,7 +68,7 @@ async function generateInterviewReport({
         }
     })
 
-    console.log(JSON.parse(response.text))
+    return JSON.parse(response.text)
 }
 
 
