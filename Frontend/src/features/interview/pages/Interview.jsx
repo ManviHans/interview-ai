@@ -105,13 +105,6 @@ const Interview = () => {
                         ))}
                     </div>
                     <div className='interview-nav__actions'>
-                        <button
-                            type='button'
-                            className='interview-nav__logout'
-                            onClick={logoutFromInterview}
-                            disabled={authLoading}>
-                            {authLoading ? 'Logging out...' : 'Log out'}
-                        </button>
                     <button
                         onClick={() => { getResumePdf(interviewId) }}
                         className='button primary-button' >
@@ -196,6 +189,14 @@ const Interview = () => {
                             ))}
                         </div>
                     </div>
+
+                    <button
+                        type='button'
+                        className='interview-sidebar__logout'
+                        onClick={logoutFromInterview}
+                        disabled={authLoading}>
+                        {authLoading ? 'Logging out...' : 'Log out'}
+                    </button>
 
                 </aside>
             </div>
